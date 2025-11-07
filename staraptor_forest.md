@@ -1,0 +1,26 @@
+# Species
+Paras
+Parasect
+Pansear
+Starly
+Staravia
+Staraptor
+Ekans
+Arbok
+Surskit
+Masquerain
+Buizel
+Floatzel
+Wooper
+Quagsire
+Magikarp
+Cutiefly
+Ribombee
+Morelull
+Shiinotic
+Caterpie
+Metapod
+Butterfree
+Pachirisu
+Purrloin
+Liepard
