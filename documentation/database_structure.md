@@ -321,3 +321,63 @@ SELECT s1.id, s2.id, 'level', 40, 'Minimum 40'
 FROM species s1, species s2
 WHERE s1.name='Skorupi' AND s2.name='Drapion';
 ```
+
+# Trainers
+
+```sql
+CREATE TABLE trainers (
+  id         SERIAL PRIMARY KEY,
+  name       TEXT NOT NULL,          -- e.g., "Rika"
+  handle     TEXT,                   -- nick/PC name
+  notes      TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+# Pokemon Instances
+
+```sql
+-- One row per actual Pokémon in the world
+CREATE TABLE pokemon_instances (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  species_id   INTEGER NOT NULL REFERENCES species(id),
+  form_id      INTEGER REFERENCES forms(id),   -- null if you don't use forms
+  nickname     TEXT,
+  level        INTEGER,                         -- PTU level
+  gender       TEXT CHECK (gender IN ('M','F','N/A','Unknown')) DEFAULT 'Unknown',
+  nature       TEXT,
+  ability_id   INTEGER REFERENCES abilities(id),-- the *chosen* ability
+  shiny        BOOLEAN NOT NULL DEFAULT FALSE,
+  captured_at  TIMESTAMPTZ,
+  ball         TEXT,                            -- Poké Ball type
+  status       TEXT,                            -- Burned, etc. (optional)
+  height_m     NUMERIC(4,2),                    -- per-mon overrides (optional)
+  weight_kg    NUMERIC(5,2),
+  notes        TEXT
+);
+```
+
+# Links between Pokémon and trainers (many-to-many, with time)
+
+```sql
+CREATE TABLE pokemon_trainer_links (
+  pokemon_id  UUID    NOT NULL REFERENCES pokemon_instances(id) ON DELETE CASCADE,
+  trainer_id  INTEGER NOT NULL REFERENCES trainers(id)          ON DELETE CASCADE,
+  role        TEXT    NOT NULL DEFAULT 'owner',   -- owner, caretaker, breeder, loan, etc.
+  is_primary  BOOLEAN NOT NULL DEFAULT FALSE,     -- optional: designate a main handler
+  started_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ended_at    TIMESTAMPTZ,
+  PRIMARY KEY (pokemon_id, trainer_id, started_at)
+);
+
+-- No duplicate "active" link for the same pair
+CREATE UNIQUE INDEX uniq_active_link
+  ON pokemon_trainer_links(pokemon_id, trainer_id)
+  WHERE ended_at IS NULL;
+
+-- Optional: allow only one active primary owner per Pokémon
+CREATE UNIQUE INDEX uniq_one_primary_owner
+  ON pokemon_trainer_links(pokemon_id)
+  WHERE is_primary = TRUE AND ended_at IS NULL;
+```
+
