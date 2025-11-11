@@ -3,7 +3,7 @@
 ## Core Tables
 
 ```sql
--- One row per species (form support optional; see §8)
+-- One row per species 
 CREATE TABLE species (
   id            SERIAL PRIMARY KEY,
   dex_no        INTEGER NOT NULL,             -- National number
